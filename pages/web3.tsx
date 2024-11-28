@@ -5,7 +5,11 @@ import {
   NFTCard,
   useAccount,
 } from "@ant-design/web3";
-import { MetaMask, WagmiWeb3ConfigProvider } from "@ant-design/web3-wagmi";
+import {
+  MetaMask,
+  WagmiWeb3ConfigProvider,
+  WalletConnect,
+} from "@ant-design/web3-wagmi";
 import { Button, message } from "antd";
 import { parseEther } from "viem";
 import {
@@ -16,7 +20,7 @@ import {
   useWatchContractEvent,
 } from "wagmi";
 import { mainnet } from "wagmi/chains";
-import { injected } from "wagmi/connectors";
+import { injected, walletConnect } from "wagmi/connectors";
 
 const config = createConfig({
   chains: [mainnet],
@@ -26,6 +30,11 @@ const config = createConfig({
   connectors: [
     injected({
       target: "metaMask",
+    }),
+    // projectId 是测试项目 ID，实际项目中你需要在 https://cloud.walletconnect.com/ 申请自己的 ID
+    walletConnect({
+      projectId: "c07c0051c2055890eade3556618e38a6",
+      showQrModal: false,
     }),
   ],
 });
@@ -126,7 +135,7 @@ export default function Web3() {
   return (
     <WagmiWeb3ConfigProvider
       config={config}
-      wallets={[MetaMask()]}
+      wallets={[MetaMask(), WalletConnect()]}
       eip6963={{
         autoAddInjectedWallets: true,
       }}
