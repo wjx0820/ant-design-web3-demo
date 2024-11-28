@@ -1,46 +1,58 @@
+import { createConfig, http, useReadContract, useWriteContract } from "wagmi";
+import { mainnet, sepolia, polygon } from "wagmi/chains";
+import {
+  WagmiWeb3ConfigProvider,
+  MetaMask,
+  Sepolia,
+  Polygon,
+} from "@ant-design/web3-wagmi";
 import {
   Address,
-  ConnectButton,
-  Connector,
   NFTCard,
+  Connector,
+  ConnectButton,
   useAccount,
+  useProvider,
 } from "@ant-design/web3";
-import {
-  MetaMask,
-  WagmiWeb3ConfigProvider,
-  WalletConnect,
-} from "@ant-design/web3-wagmi";
+import { injected } from "wagmi/connectors";
 import { Button, message } from "antd";
 import { parseEther } from "viem";
-import {
-  createConfig,
-  http,
-  useReadContract,
-  useWriteContract,
-  useWatchContractEvent,
-} from "wagmi";
-import { mainnet } from "wagmi/chains";
-import { injected, walletConnect } from "wagmi/connectors";
 
 const config = createConfig({
-  chains: [mainnet],
+  chains: [mainnet, sepolia, polygon],
   transports: {
     [mainnet.id]: http(),
+    [sepolia.id]: http(),
+    [polygon.id]: http(),
   },
   connectors: [
     injected({
       target: "metaMask",
     }),
-    // projectId 是测试项目 ID，实际项目中你需要在 https://cloud.walletconnect.com/ 申请自己的 ID
-    walletConnect({
-      projectId: "c07c0051c2055890eade3556618e38a6",
-      showQrModal: false,
-    }),
   ],
 });
 
+const contractInfo = [
+  {
+    id: 1,
+    name: "Ethereum",
+    contractAddress: "0xEcd0D12E21805803f70de03B72B1C162dB0898d9",
+  },
+  {
+    id: 5,
+    name: "Sepolia",
+    contractAddress: "0x418325c3979b7f8a17678ec2463a74355bdbe72c",
+  },
+  {
+    id: 137,
+    name: "Polygon",
+    contractAddress: "0x418325c3979b7f8a17678ec2463a74355bdbe72c",
+  },
+];
+
 const CallTest = () => {
   const { account } = useAccount();
+  const { chain } = useProvider();
   const result = useReadContract({
     abi: [
       {
@@ -51,41 +63,12 @@ const CallTest = () => {
         outputs: [{ type: "uint256" }],
       },
     ],
-    // Sepolia test contract 0x418325c3979b7f8a17678ec2463a74355bdbe72c
-    address: "0xEcd0D12E21805803f70de03B72B1C162dB0898d9",
+    address: contractInfo.find((item) => item.id === chain?.id)
+      ?.contractAddress as `0x${string}`,
     functionName: "balanceOf",
     args: [account?.address as `0x${string}`],
   });
   const { writeContract } = useWriteContract();
-
-  useWatchContractEvent({
-    address: "0xEcd0D12E21805803f70de03B72B1C162dB0898d9",
-    abi: [
-      {
-        anonymous: false,
-        inputs: [
-          {
-            indexed: false,
-            internalType: "address",
-            name: "minter",
-            type: "address",
-          },
-          {
-            indexed: false,
-            internalType: "uint256",
-            name: "amount",
-            type: "uint256",
-          },
-        ],
-        name: "Minted",
-        type: "event",
-      },
-    ],
-    eventName: "Minted",
-    onLogs() {
-      message.success("new minted!");
-    },
-  });
 
   return (
     <div>
@@ -109,7 +92,8 @@ const CallTest = () => {
                   outputs: [],
                 },
               ],
-              address: "0xEcd0D12E21805803f70de03B72B1C162dB0898d9",
+              address: contractInfo.find((item) => item.id === chain?.id)
+                ?.contractAddress as `0x${string}`,
               functionName: "mint",
               args: [1],
               value: parseEther("0.01"),
@@ -135,10 +119,8 @@ export default function Web3() {
   return (
     <WagmiWeb3ConfigProvider
       config={config}
-      wallets={[MetaMask(), WalletConnect()]}
-      eip6963={{
-        autoAddInjectedWallets: true,
-      }}
+      chains={[Sepolia, Polygon]}
+      wallets={[MetaMask()]}
     >
       <Address format address="0xEcd0D12E21805803f70de03B72B1C162dB0898d9" />
       <NFTCard
