@@ -1,10 +1,11 @@
 import { createConfig, http, useReadContract, useWriteContract } from "wagmi";
-import { mainnet, sepolia, polygon } from "wagmi/chains";
+import { mainnet, sepolia, polygon, hardhat } from "wagmi/chains";
 import {
   WagmiWeb3ConfigProvider,
   MetaMask,
   Sepolia,
   Polygon,
+  Hardhat,
 } from "@ant-design/web3-wagmi";
 import {
   Address,
@@ -19,11 +20,12 @@ import { Button, message } from "antd";
 import { parseEther } from "viem";
 
 const config = createConfig({
-  chains: [mainnet, sepolia, polygon],
+  chains: [mainnet, sepolia, polygon, hardhat],
   transports: {
     [mainnet.id]: http(),
     [sepolia.id]: http(),
     [polygon.id]: http(),
+    [hardhat.id]: http("http://127.0.0.1:8545/"),
   },
   connectors: [
     injected({
@@ -47,6 +49,11 @@ const contractInfo = [
     id: 137,
     name: "Polygon",
     contractAddress: "0x418325c3979b7f8a17678ec2463a74355bdbe72c",
+  },
+  {
+    id: hardhat.id,
+    name: "Hardhat",
+    contractAddress: "0x5fbdb2315678afecb367f032d93f642f64180aa3", // 这里需要替换为你本地部署后获得的地址
   },
 ];
 
@@ -119,7 +126,7 @@ export default function Web3() {
   return (
     <WagmiWeb3ConfigProvider
       config={config}
-      chains={[Sepolia, Polygon]}
+      chains={[Sepolia, Polygon, Hardhat]}
       wallets={[MetaMask()]}
     >
       <Address format address="0xEcd0D12E21805803f70de03B72B1C162dB0898d9" />
